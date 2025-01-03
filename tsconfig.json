@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "es2016" /* Set the JavaScript language version. */,
+    "module": "commonjs" /* Specify module code generation. */,
+    "jsx": "preserve" /* Enable React JSX. */,
+    "baseUrl": "./" /* Base directory for resolving non-relative module names. */,
+    "paths": {
+      "@components/*": ["src/components/*"],
+      "@lib/*": ["src/lib/*"],
+      "@image/*": ["public/image/*"]
+    },
+    "strict": true /* Enable all strict type-checking options. */,
+    "esModuleInterop": true /* Support for CommonJS modules. */,
+    "allowSyntheticDefaultImports": true /* Allow default imports even if the module doesn't have a default export. */,
+    "skipLibCheck": true /* Skip type checking all declaration files. */,
+    "forceConsistentCasingInFileNames": true /* Ensure consistent casing in file names. */,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "custom.d.ts",
+    "src",
+    ".next/types/**/*.ts",
+    "next.config.js"
+  ] /* Include all files in the src directory. */,
+  "exclude": [
+    "node_modules"
+  ] /* Exclude node_modules to avoid unnecessary checks. */
+}
