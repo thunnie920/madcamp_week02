@@ -54,6 +54,7 @@ const TopBarWrapper = styled(motion.div)`
   gap: 40px;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
   z-index: 10;
+  margin-bottom: 0px;
 
   @media (max-width: 768px) {
     padding: 0 16px; /* 모바일 화면에서 패딩 추가 조정 */

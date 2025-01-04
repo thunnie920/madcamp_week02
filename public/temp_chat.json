@@ -1,0 +1,65 @@
+{
+  "chatRoom": {
+    "name": "Temporary Chat Room",
+    "participants": [
+      { "userId": "user_001", "name": "Alice" },
+      { "userId": "user_002", "name": "Bob" },
+      { "userId": "user_003", "name": "Charlie" },
+      { "userId": "user_004", "name": "David" },
+      { "userId": "user_005", "name": "Eve" },
+      { "userId": "user_006", "name": "Frank" },
+      { "userId": "user_007", "name": "Grace" }
+    ],
+    "messages": [
+      {
+        "messageId": "msg_001",
+        "senderId": "user_001",
+        "senderName": "Alice",
+        "message": "Hi everyone!",
+        "time": "2025-01-04T10:30:00Z"
+      },
+      {
+        "messageId": "msg_002",
+        "senderId": "user_002",
+        "senderName": "Bob",
+        "message": "Hello Alice!",
+        "time": "2025-01-04T10:31:00Z"
+      },
+      {
+        "messageId": "msg_003",
+        "senderId": "user_003",
+        "senderName": "Charlie",
+        "message": "Good morning, everyone.",
+        "time": "2025-01-04T10:32:00Z"
+      },
+      {
+        "messageId": "msg_004",
+        "senderId": "user_004",
+        "senderName": "David",
+        "message": "Hi all, how are you doing?",
+        "time": "2025-01-04T10:33:00Z"
+      },
+      {
+        "messageId": "msg_005",
+        "senderId": "user_005",
+        "senderName": "Eve",
+        "message": "Doing great, David. Thanks for asking!",
+        "time": "2025-01-04T10:34:00Z"
+      },
+      {
+        "messageId": "msg_006",
+        "senderId": "user_006",
+        "senderName": "Frank",
+        "message": "Hi everyone! Excited to chat with you all.",
+        "time": "2025-01-04T10:35:00Z"
+      },
+      {
+        "messageId": "msg_007",
+        "senderId": "user_007",
+        "senderName": "Grace",
+        "message": "Hello! This is going to be fun!",
+        "time": "2025-01-04T10:36:00Z"
+      }
+    ]
+  }
+}

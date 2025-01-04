@@ -24,7 +24,7 @@ export default function LogInComponent() {
       <LogoContainer
         initial={{
           opacity: 0,
-          y: -90,
+          y: +90,
         }}
         animate={{
           opacity: 1,
