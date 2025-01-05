@@ -9,7 +9,7 @@ exports.handleChat = async (req, res) => {
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // 사용할 모델
+      model: "gpt-4o", // 사용할 모델
       messages: [
         {
           role: "system",
