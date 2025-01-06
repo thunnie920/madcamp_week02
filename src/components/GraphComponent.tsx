@@ -81,11 +81,15 @@ export default function GraphComponent() {
             position: "relative", // 드롭다운과 차트를 겹칠 수 있도록 relative 설정
             flex: 1, // 남은 공간을 채우도록 설정
             display: "flex",
+            width: "100%",
+            height: "100%",
             justifyContent: "flex-start",
             alignItems: "center",
           }}
         >
-          <CoinChartComponent />
+          {/* CoinChartComponent에 selectedOption을 props로 전달 */}
+          <CoinChartComponent selectedCoin={selectedOption} dataLimit={1000} />
+
           <DropDownContainer>
             <DropdownButton onClick={toggleDropdown}>
               <span>{selectedOption}</span>
@@ -116,12 +120,12 @@ const GraphContainer = styled.div`
   display: flex;
   height: 40vh;
   border-radius: 5px;
-  background-color: green;
+  background-color: #f5f5f5;
   padding: 7px;
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
   padding-bottom: 10px;
 `;
 
