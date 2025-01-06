@@ -50,8 +50,8 @@ const fetchTopCoins = async () => {
   }
 };
 
-// 매 30초마다 실행하는 크론 작업
-cron.schedule("*/10 * * * * *", () => {
+// 매 2시간마다 호출
+cron.schedule("0 */2 * * *", () => {
   fetchTopCoins();
 });
 

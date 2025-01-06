@@ -4,7 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const aiChatRoutes = require("./src/routes/AIchat");
 const topTierVolumeRoutes = require("./src/routes/topTierVolume");
-const dailyCoinRoutes = require("./src/routes/daily");
+const coinPriceRoutes = require("./src/routes/ohlcv");
 const app = express();
 const port = 4000;
 
@@ -16,7 +16,7 @@ app.use(express.json()); // JSON 요청 본문 파싱
 app.use("/chat", aiChatRoutes); // /chat 경로로 라우트 연결
 // 기타 라우트 연결
 app.use("/volumelist", topTierVolumeRoutes); // volumelist 경로로 라우트 연결
-app.use("/dailycoins", dailyCoinRoutes); // dailycoins 경로로 라우트 연결
+app.use("/coinsprice", coinPriceRoutes); // coins 경로로 라우트 연결
 
 // 서버 시작
 app.listen(port, async () => {
