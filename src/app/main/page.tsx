@@ -10,7 +10,7 @@ export default function Main() {
       <div>
         <TopBar />
       </div>
-      <div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <GraphComponent />
         <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
           <ChatComponent />

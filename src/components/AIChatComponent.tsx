@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
+import axios from "axios";
 import styled from "styled-components";
 import Image from "next/image";
 import Gptlogo from "@image/gptlogo.png";
 import TextField from "@mui/material/TextField";
-import CustomScrollbar from "@components/CustomScrollbar";
 
 export default function AIChatComponent() {
   const [input, setInput] = useState(""); // 사용자 입력 상태
@@ -21,15 +21,18 @@ export default function AIChatComponent() {
     setIsComposing(false); // IME 입력 완료
   };
 
-  // Mock API 호출 (테스트용)
-  const mockApiCall = (userMessage: string) => {
-    return new Promise<{ content: string }>((resolve) => {
-      setTimeout(() => {
-        resolve({
-          content: `GPT 응답: "${userMessage}"에 대한 답변입니다.`,
-        });
-      }, 1000); // 1초 지연 후 응답
-    });
+  // 실제 API 호출
+  const callGptApi = async (userMessage: string) => {
+    try {
+      const response = await axios.post("http://localhost:4000/chat", {
+        message: userMessage,
+      });
+
+      return response.data.reply; // 백엔드가 반환한 GPT 응답 메시지
+    } catch (error) {
+      console.error("GPT API 호출 실패:", error);
+      throw new Error("Failed to communicate with the GPT API.");
+    }
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,51 +50,44 @@ export default function AIChatComponent() {
       setMessages((prev) => [...prev, userMessage]); // 사용자 메시지를 대화에 추가
       setInput(""); // 입력 필드 초기화
 
-      // Mock API 호출
+      // 실제 GPT API 호출
       try {
-        const response = await mockApiCall(input); // 실제 API 호출 시 여기를 변경
-        const gptMessage = { role: "assistant", content: response.content }; // GPT 응답 메시지
+        const gptResponse = await callGptApi(input); // API 호출
+        const gptMessage = { role: "assistant", content: gptResponse }; // GPT 응답 메시지
         setMessages((prev) => [...prev, gptMessage]); // GPT 응답을 대화에 추가
       } catch (error) {
-        console.error("Mock API 호출 실패", error);
-      } finally {
+        console.error("GPT API 호출 실패:", error);
       }
     }
   };
 
   return (
     <AIChatContainer>
-      <CustomScrollbar
-        containerClassName="custom-scrollbar-container"
-        style={{ display: "flex", width: "100%" }}
-      >
-        <ChatAreaContainer>
-          <div
-            style={{
-              flexDirection: "row",
-              gap: "6px",
-              paddingBottom: "6px",
-              width: "100%",
-            }}
-          >
-            {messages.map((msg, index) => (
-              <MessageContainer key={index} role={msg.role}>
-                {(msg.role === "assistant" || msg.role === "system") && (
-                  <GPTIcon>
-                    <Image
-                      src={Gptlogo}
-                      style={{ marginRight: "13px" }}
-                      alt="gptlogo"
-                    />
-                  </GPTIcon>
-                )}
-
-                <TextContainer role={msg.role}>{msg.content}</TextContainer>
-              </MessageContainer>
-            ))}
-          </div>
-        </ChatAreaContainer>
-      </CustomScrollbar>
+      <ChatAreaContainer>
+        <div
+          style={{
+            flexDirection: "row",
+            gap: "6px",
+            paddingBottom: "6px",
+            width: "100%",
+          }}
+        >
+          {messages.map((msg, index) => (
+            <MessageContainer key={index} role={msg.role}>
+              {(msg.role === "assistant" || msg.role === "system") && (
+                <GPTIcon>
+                  <Image
+                    src={Gptlogo}
+                    style={{ marginRight: "13px" }}
+                    alt="gptlogo"
+                  />
+                </GPTIcon>
+              )}
+              <TextContainer role={msg.role}>{msg.content}</TextContainer>
+            </MessageContainer>
+          ))}
+        </div>
+      </ChatAreaContainer>
       <InputArea>
         <div style={{ width: "80%", display: "flex" }}>
           <TextField
@@ -132,7 +128,6 @@ const InputArea = styled.div`
   justify-content: center;
   color: #302d2d;
   background-color: #d9d9d9;
-  margin-top: auto;
 `;
 
 const TextContainer = styled.div<{ role: string }>`
@@ -157,7 +152,7 @@ const MessageContainer = styled.div<{ role: string }>`
   gap: 7px;
   max-width: 100%; /* 부모 컨테이너의 너비에 맞춤 */
   align-items: flex-start; /* 말풍선을 상단 정렬 */
-  margin-bottom: 10px; /* 메시지 간 하단 간격 */
+  margin-bottom: 5px; /* 메시지 간 하단 간격 */
 `;
 
 const ChatAreaContainer = styled.div`
@@ -165,20 +160,32 @@ const ChatAreaContainer = styled.div`
   display: flex;
   flex-direction: column;
   height: calc(45vh - 54px); /* 고정 높이 */
-  margin-bottom: 10px;
+  margin-bottom: 3px;
   width: 100%;
   gap: 6px;
   align-items: flex-start;
   justify-content: flex-start;
-  overflow-y: auto; /* 세로 스크롤 활성화 */
-  box-sizing: border-box; /* 크기 계산에 패딩과 스크롤바 포함 */
-  padding-right: 10px; /* 스크롤바 공간 추가 */
+
+  /* 스크롤 관련 설정 */
+  max-height: calc(100% - 50px); /* 드롭다운의 최대 높이 설정 */
+  overflow-y: auto; /* 컨텐츠가 넘치면 세로 스크롤 활성화 */
+
+  &::-webkit-scrollbar {
+    width: 0px; /* 스크롤바 너비 (Chrome, Edge, Safari) */
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #f0f0f0; /* 스크롤바 색상 */
+    border-radius: 5px; /* 스크롤바 모서리 둥글게 */
+  }
+  &::-webkit-scrollbar-track {
+    background-color: #f0f0f0; /* 스크롤바 트랙 배경 */
+  }
 `;
 
 const GPTIcon = styled.div`
   width: 30px;
   height: 30px;
-  background-color: #bc3a3a;
+  background-color: transparent;
   border-radius: 5px;
   margin-bottom: 10px; /* 메시지 간 하단 간격 */
 `;

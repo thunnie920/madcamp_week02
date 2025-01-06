@@ -1,18 +1,20 @@
 "use client";
 import { useState, useEffect } from "react";
+import axios from "axios";
 import styled from "styled-components";
 import Image from "next/image";
 import Search from "@image/search.png";
 import Selected from "@image/selected.png";
 import Unselected from "@image/unselected.png";
 import { motion } from "framer-motion";
-import CustomScrollbar from "@components/CustomScrollbar";
 import TextField from "@mui/material/TextField";
+import { Spinner } from "basic-loading";
 
 interface Coin {
-  name: string;
+  fullName: string;
   price: number;
-  change: number;
+  symbol: string;
+  changePct24Hour: number;
   isFavorite: boolean;
 }
 
@@ -20,55 +22,56 @@ export default function CoinListComponent() {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredCoins, setFilteredCoins] = useState<Coin[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // 로딩 상태 추가
 
   useEffect(() => {
-    const fetchCoins = async () => {
+    const callCoinApi = async () => {
       try {
-        const response = await fetch("/temp_coin.json"); // public 폴더 내 JSON 파일 경로
-        const data: Coin[] = await response.json();
-        // 정렬: isFavorite이 true인 코인을 상단에 배치
+        setIsLoading(true); // 로딩 시작
+        const response = await axios.get(
+          "http://localhost:4000/volumelist/top-coins"
+        );
+        console.log("API Response:", response.data); // 응답 데이터 확인
+        const data: Coin[] = response.data.data;
+
+        // 데이터가 배열인지 확인
+        if (!Array.isArray(data)) {
+          throw new Error("API response is not an array");
+        }
+
         const sortedData = data.sort(
           (a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0)
         );
         setCoins(sortedData);
-        setFilteredCoins(sortedData); // 초기 데이터 설정
+        setFilteredCoins(sortedData);
       } catch (error) {
         console.error("Failed to fetch coin data:", error);
+      } finally {
+        setIsLoading(false); // 로딩 종료
       }
     };
 
-    fetchCoins();
+    callCoinApi();
   }, []);
 
   const handleFavoriteToggle = (index: number) => {
-    const selectedCoin = filteredCoins[index]; // 클릭된 filteredCoins 항목
-    setCoins((prevCoins) => {
-      // coins 배열에서 해당 코인을 찾아 업데이트
-      const updatedCoins = prevCoins.map((coin) =>
-        coin.name === selectedCoin.name
+    const selectedCoin = filteredCoins[index];
+
+    // coins 배열 업데이트
+    setCoins((prevCoins) =>
+      prevCoins.map((coin) =>
+        coin.symbol === selectedCoin.symbol
           ? { ...coin, isFavorite: !coin.isFavorite }
           : coin
-      );
+      )
+    );
 
-      // 업데이트 후 정렬: isFavorite이 true인 코인은 위로, false인 코인은 아래로
-      const sortedCoins = updatedCoins.sort(
-        (a, b) => Number(b.isFavorite) - Number(a.isFavorite)
-      );
-
-      return sortedCoins;
-    });
-
-    // 필터된 코인 목록도 다시 업데이트
-    setFilteredCoins((prevFilteredCoins) => {
-      const updatedFilteredCoins = prevFilteredCoins.map((coin, i) =>
+    // filteredCoins 배열 업데이트
+    setFilteredCoins((prevFilteredCoins) =>
+      prevFilteredCoins.map((coin, i) =>
         i === index ? { ...coin, isFavorite: !coin.isFavorite } : coin
-      );
-
-      // 업데이트 후 정렬: isFavorite이 true인 코인은 위로, false인 코인은 아래로
-      return updatedFilteredCoins.sort(
-        (a, b) => Number(b.isFavorite) - Number(a.isFavorite)
-      );
-    });
+      )
+    );
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,7 +80,7 @@ export default function CoinListComponent() {
 
   const handleSearch = () => {
     const results = coins.filter((coin) =>
-      coin.name.toLowerCase().includes(searchTerm.toLowerCase())
+      coin.symbol.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredCoins(results);
   };
@@ -112,39 +115,69 @@ export default function CoinListComponent() {
           </div>
         </SearchButton>
       </SearchContainer>
-      <CustomScrollbar
-        containerClassName="custom-scrollbar-container"
-        style={{ display: "flex", width: "100%" }}
-      >
-        <CoinContainer>
-          {filteredCoins.length > 0 ? (
-            filteredCoins.map((coin, index) => (
-              <Coin key={index} isSelected={coin.isFavorite}>
-                <Image
-                  src={coin.isFavorite ? Selected : Unselected}
-                  alt={coin.isFavorite ? "selected" : "unselected"}
-                  width={20}
-                  style={{ marginLeft: "13px", cursor: "pointer" }}
-                  onClick={() => handleFavoriteToggle(index)}
-                />
-                <CoinName>{coin.name}</CoinName>
-                <CoinPrice
-                  style={{ color: coin.change > 0 ? "#bc3a3a" : "#2c6be0" }}
-                >
-                  {coin.price.toLocaleString()}
-                </CoinPrice>
-                <CoinPricePercent
-                  style={{ color: coin.change > 0 ? "#bc3a3a" : "#2c6be0" }}
-                >
-                  {coin.change > 0 ? `+${coin.change}%` : `${coin.change}%`}
-                </CoinPricePercent>
-              </Coin>
-            ))
-          ) : (
-            <NoResults>검색 결과가 없습니다.</NoResults>
-          )}
-        </CoinContainer>
-      </CustomScrollbar>
+      <CoinContainer>
+        {isLoading ? ( // 로딩 상태 확인
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            <Spinner
+              option={{
+                size: 30,
+                bgColor: "#bc3a3a",
+                barColor: "#d9d9d9",
+                thickness: 4,
+              }}
+            />
+          </div>
+        ) : filteredCoins.length > 0 ? (
+          filteredCoins.map((coin, index) => (
+            <Coin key={index} isSelected={coin.isFavorite}>
+              <Image
+                src={coin.isFavorite ? Selected : Unselected}
+                alt={coin.isFavorite ? "selected" : "unselected"}
+                width={20}
+                style={{ marginLeft: "13px", cursor: "pointer" }}
+                onClick={() => handleFavoriteToggle(index)} // 즐겨찾기 토글
+              />
+              <CoinName>{coin.symbol}</CoinName>{" "}
+              <CoinPrice
+                style={{
+                  color: coin.changePct24Hour > 0 ? "#bc3a3a" : "#2c6be0",
+                }}
+              >
+                {" "}
+                $
+                {coin.price.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
+              </CoinPrice>
+              <CoinPricePercent
+                style={{
+                  color: coin.changePct24Hour > 0 ? "#bc3a3a" : "#2c6be0",
+                }}
+              >
+                {coin.changePct24Hour > 0
+                  ? `+${coin.changePct24Hour.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}%`
+                  : `${coin.changePct24Hour.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}%`}
+              </CoinPricePercent>
+            </Coin>
+          ))
+        ) : (
+          <NoResults>검색 결과가 없습니다.</NoResults>
+        )}
+      </CoinContainer>
     </CoinListContainer>
   );
 }
@@ -177,15 +210,26 @@ const CoinContainer = styled(motion.div)`
   position: relative;
   display: flex;
   flex-direction: column;
-  height: calc(45vh - 60px); /* 고정 높이 */
-  margin-bottom: 10px;
+  height: calc(100% - 60px); /* 고정 높이 */
+  margin-bottom: 3px;
   width: 100%;
   gap: 6px;
   align-items: flex-start;
   justify-content: flex-start;
-  overflow-y: auto; /* 세로 스크롤 활성화 */
-  padding-right: 10px; /* 스크롤바 여백 */
-  box-sizing: content-box; /* 스크롤바로 인한 크기 변화 방지 */
+  /* 스크롤 관련 설정 */
+  max-height: calc(100% - 50px); /* 드롭다운의 최대 높이 설정 */
+  overflow-y: auto; /* 컨텐츠가 넘치면 세로 스크롤 활성화 */
+
+  &::-webkit-scrollbar {
+    width: 0px; /* 스크롤바 너비 (Chrome, Edge, Safari) */
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #f0f0f0; /* 스크롤바 색상 */
+    border-radius: 5px; /* 스크롤바 모서리 둥글게 */
+  }
+  &::-webkit-scrollbar-track {
+    background-color: #f0f0f0; /* 스크롤바 트랙 배경 */
+  }
 `;
 
 interface CoinProps {
@@ -204,6 +248,7 @@ const Coin = styled.div<CoinProps>`
   background-color: #d9d9d9; /* 회색 배경 */
   box-sizing: border-box; /* 패딩을 포함한 박스 크기 계산 */
   transition: background-color 0.3s ease, color 0.3s ease;
+  padding: 0 10px; /* 좌우 여백 추가 */
 `;
 
 const CoinName = styled.span`
@@ -211,6 +256,8 @@ const CoinName = styled.span`
   font-family: "Spoqa Han Sans Neo", sans-serif;
   font-weight: 400;
   color: #302d2d;
+  text-align: center; /* 왼쪽 정렬 */
+  flex: 1; /* 동등한 공간 차지 */
 `;
 
 const CoinPrice = styled.span`
@@ -218,6 +265,8 @@ const CoinPrice = styled.span`
   font-family: "Spoqa Han Sans Neo", sans-serif;
   font-weight: 600;
   color: #302d2d;
+  text-align: center; /* 오른쪽 정렬 */
+  flex: 1.2; /* 더 많은 공간 차지 */
 `;
 
 const CoinPricePercent = styled.span`
@@ -226,6 +275,8 @@ const CoinPricePercent = styled.span`
   font-weight: 600;
   color: #302d2d;
   padding-right: 13px;
+  text-align: center; /* 오른쪽 정렬 */
+  flex: 0.8; /* 적당한 공간 차지 */
 `;
 
 const SearchButton = styled.button`

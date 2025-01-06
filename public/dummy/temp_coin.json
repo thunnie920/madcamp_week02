@@ -1,0 +1,86 @@
+[
+  {
+    "name": "AVAX",
+    "price": 7092320,
+    "change": 3.14,
+    "isFavorite": true
+  },
+  {
+    "name": "ETH",
+    "price": 9988186,
+    "change": -4.47,
+    "isFavorite": false
+  },
+  {
+    "name": "BTC",
+    "price": 3431409,
+    "change": -2.44,
+    "isFavorite": true
+  },
+  {
+    "name": "LTC",
+    "price": 964988,
+    "change": -0.24,
+    "isFavorite": false
+  },
+  {
+    "name": "SOL",
+    "price": 7477548,
+    "change": 3.69,
+    "isFavorite": true
+  },
+  {
+    "name": "ADA",
+    "price": 6654522,
+    "change": -0.53,
+    "isFavorite": false
+  },
+  {
+    "name": "DOT",
+    "price": 5052701,
+    "change": -4.72,
+    "isFavorite": true
+  },
+  {
+    "name": "BNB",
+    "price": 8123400,
+    "change": 2.17,
+    "isFavorite": false
+  },
+  {
+    "name": "XRP",
+    "price": 589334,
+    "change": 1.89,
+    "isFavorite": true
+  },
+  {
+    "name": "DOGE",
+    "price": 75623,
+    "change": 5.76,
+    "isFavorite": false
+  },
+  {
+    "name": "SHIB",
+    "price": 789,
+    "change": -3.12,
+    "isFavorite": true
+  },
+  {
+    "name": "MATIC",
+    "price": 1845321,
+    "change": 0.92,
+    "isFavorite": false
+  },
+  {
+    "name": "ATOM",
+    "price": 1294003,
+    "change": -1.56,
+    "isFavorite": true
+  },
+  {
+    "name": "FTM",
+    "price": 890214,
+    "change": 3.21,
+    "isFavorite": false
+  }
+]

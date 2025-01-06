@@ -1,6 +1,7 @@
 {
   "chatRoom": {
     "name": "Temporary Chat Room",
+    "currentUserId": "user_003",
     "participants": [
       { "userId": "user_001", "name": "Alice" },
       { "userId": "user_002", "name": "Bob" },

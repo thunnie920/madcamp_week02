@@ -2,6 +2,7 @@
 import styled from "styled-components";
 import Image from "next/image";
 import Graph from "@image/graph.png";
+import LogInBtn from "@image/logInBtn.png";
 import { easeIn, easeInOut, motion } from "framer-motion";
 
 export default function LogInComponent() {
@@ -34,9 +35,9 @@ export default function LogInComponent() {
       >
         <Image src={Graph} alt="graph" />
       </LogoContainer>
-      <LogInBtn className="kakao" onClick={kakaoLogin}>
-        카카오 로그인
-      </LogInBtn>
+      <div onClick={kakaoLogin}>
+        <Image src={LogInBtn} alt="로그인 버튼" />
+      </div>
     </LogInContainer>
   );
 }
@@ -73,28 +74,4 @@ const WelcomeTitle = styled.div`
   margin: 0;
   text-align: center;
   width: 100%;
-`;
-
-const LogInBtn = styled.button`
-  width: 100%;
-  padding: 10px 20px; /* 버튼 내부 여백 */
-  height: 84px;
-  text-align: center;
-  font-family: "Spoqa Han Sans Neo", sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  border-radius: 10px;
-  line-height: 20px;
-  letter-spacing: -0.06em;
-  border: none;
-  user-select: none;
-  font-size: 40px;
-
-  &.kakao {
-    background: #fee500;
-    color: #391c1c;
-    font-weight: 600;
-  }
 `;

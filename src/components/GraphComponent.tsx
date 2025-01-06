@@ -4,11 +4,16 @@ import styled from "styled-components";
 import Image from "next/image";
 import Dropdown from "@image/dropdown.png";
 import { motion } from "framer-motion";
+import axios from "axios";
+import CoinChart, {
+  CoinChartComponent,
+} from "@components/CoinGraph/CoinChartComponent";
 
 interface Coin {
-  name: string;
+  fullName: string;
   price: number;
-  change: number;
+  symbol: string;
+  changePct24Hour: number;
   isFavorite: boolean;
 }
 
@@ -19,34 +24,28 @@ export default function GraphComponent() {
     setSelected(value); // 선택된 버튼 상태 업데이트
   };
 
-  const timeOptions: string[] = [
-    "1 Year",
-    "1 Month",
-    "1 Week",
-    "1 Day",
-    "1 Hour",
-    "1 Minute",
-    "1 Second",
-  ];
+  const timeOptions: string[] = ["1 Day", "1 Hour", "1 Minute"];
 
   const [isOpen, setIsOpen] = useState(false); // 드롭다운 열림 상태
   const [selectedOption, setSelectedOption] = useState<string>("BTC"); // 선택된 옵션
   const [options, setOptions] = useState<string[]>([]); // 옵션 리스트
 
   useEffect(() => {
-    // JSON 데이터 가져오기
-    const fetchOptions = async () => {
+    // coin api 가져오기
+    const callCoinSymbolApi = async () => {
       try {
-        const response = await fetch("/temp_coin.json");
-        const data: Coin[] = await response.json(); // JSON 데이터를 Coin[] 타입으로 지정
-        const uniqueNames = [...new Set(data.map((item) => item.name))]; // 중복 제거
-        setOptions(uniqueNames);
+        const response = await axios.get(
+          "http://localhost:4000/volumelist/top-coins"
+        );
+        const data: Coin[] = response.data.data;
+        const uniqueSymbols = [...new Set(data.map((item) => item.symbol))]; // 중복 제거
+        setOptions(uniqueSymbols);
       } catch (error) {
         console.error("Failed to fetch options:", error);
       }
     };
 
-    fetchOptions();
+    callCoinSymbolApi();
   }, []);
 
   const toggleDropdown = () => setIsOpen(!isOpen); // 드롭다운 토글 함수
@@ -69,25 +68,45 @@ export default function GraphComponent() {
           </TimeBtn>
         ))}
       </TimeBtnContainer>
-      <DropDownContainer>
-        <DropdownButton onClick={toggleDropdown}>
-          <span>{selectedOption}</span>
-          <Image src={Dropdown} alt="dropdown" width={20} height={20} />
-        </DropdownButton>
-        {isOpen && (
-          <OptionsContainer>
-            {options.map((option) => (
-              <Option
-                key={option}
-                onClick={() => handleOptionSelect(option)}
-                isSelected={selectedOption === option}
-              >
-                {option}
-              </Option>
-            ))}
-          </OptionsContainer>
-        )}
-      </DropDownContainer>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          width: "100%",
+          height: "100%",
+        }}
+      >
+        <div
+          style={{
+            position: "relative", // 드롭다운과 차트를 겹칠 수 있도록 relative 설정
+            flex: 1, // 남은 공간을 채우도록 설정
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+          }}
+        >
+          <CoinChartComponent />
+          <DropDownContainer>
+            <DropdownButton onClick={toggleDropdown}>
+              <span>{selectedOption}</span>
+              <Image src={Dropdown} alt="dropdown" width={20} height={20} />
+            </DropdownButton>
+            {isOpen && (
+              <OptionsContainer>
+                {options.map((option) => (
+                  <Option
+                    key={option}
+                    onClick={() => handleOptionSelect(option)}
+                    isSelected={selectedOption === option}
+                  >
+                    {option}
+                  </Option>
+                ))}
+              </OptionsContainer>
+            )}
+          </DropDownContainer>
+        </div>
+      </div>
     </GraphContainer>
   );
 }
@@ -95,7 +114,7 @@ export default function GraphComponent() {
 const GraphContainer = styled.div`
   margin-top: calc(64px + 10px);
   display: flex;
-  height: 41vh;
+  height: 40vh;
   border-radius: 5px;
   background-color: green;
   padding: 7px;
@@ -103,16 +122,16 @@ const GraphContainer = styled.div`
   justify-content: flex-start;
   align-items: center;
   gap: 20px;
-  margin-bottom: 10px;
+  padding-bottom: 10px;
 `;
 
 const TimeBtnContainer = styled(motion.div)`
   display: flex;
   width: 10%;
-  height: 100%; /* Stretch to match parent height */
+  height: 100%;
   flex-direction: column;
-  justify-content: space-evenly; /* Evenly distribute buttons */
-  gap: 10px; /* Space between buttons */
+  justify-content: flex-start;
+  align-items: flex-start;
 `;
 
 interface TimeBtnProps {
@@ -121,31 +140,29 @@ interface TimeBtnProps {
 
 const TimeBtn = styled.button<TimeBtnProps>`
   width: 100%;
-  height: auto; /* Adjust height dynamically if needed */
-  flex-grow: 1; /* Make buttons grow proportionally */
+  height: calc((100% - 50px) / 7); /* 간격 포함한 버튼 비율 조정 */
   padding: 10px 20px;
+  margin-bottom: 10px;
   text-align: center;
   font-family: "Spoqa Han Sans Neo", sans-serif;
   display: flex;
   justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  border-radius: 10px;
-  line-height: 20px;
-  letter-spacing: -0.06em;
   border: none;
-  user-select: none;
+  align-items: center;
+  border-radius: 5px;
   font-size: 15px;
   font-weight: 700;
-  background-color: ${({ isSelected }) =>
-    isSelected ? "#bc3a3a" : "#e0e0e0"}; /* Selection color */
-  color: ${({ isSelected }) =>
-    isSelected ? "#e0e0e0" : "#302d2d"}; /* Selection font color */
+  background-color: ${({ isSelected }) => (isSelected ? "#bc3a3a" : "#f0f0f0")};
+  color: ${({ isSelected }) => (isSelected ? "#f0f0f0" : "#302d2d")};
   transition: background-color 0.3s ease, color 0.3s ease;
+
+  &:last-child {
+    margin-bottom: 5px;
+  }
 `;
 
 const DropDownContainer = styled.div`
-  position: relative;
+  position: absolute;
   display: flex;
   width: 20%;
   height: 100%;
@@ -183,6 +200,21 @@ const OptionsContainer = styled.ul`
   margin: 0;
   padding: 10px 0;
   z-index: 100;
+
+  /* 스크롤 관련 설정 */
+  max-height: calc(100% - 60px); /* 드롭다운의 최대 높이 설정 */
+  overflow-y: auto; /* 컨텐츠가 넘치면 세로 스크롤 활성화 */
+
+  &::-webkit-scrollbar {
+    width: 0px; /* 스크롤바 너비 (Chrome, Edge, Safari) */
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #f0f0f0; /* 스크롤바 색상 */
+    border-radius: 5px; /* 스크롤바 모서리 둥글게 */
+  }
+  &::-webkit-scrollbar-track {
+    background-color: #f0f0f0; /* 스크롤바 트랙 배경 */
+  }
 `;
 
 const Option = styled.li<{ isSelected: boolean }>`
