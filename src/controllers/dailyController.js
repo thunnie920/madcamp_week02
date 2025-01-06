@@ -1,5 +1,3 @@
-// controllers/dailyOHLCVController.js
-
 const axios = require("axios");
 const cron = require("node-cron");
 const dailyOHLCVConfig = require("../config/daily");
@@ -18,14 +16,14 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // -- DailyCoins Fetch
 const fetchDailyCoins = async () => {
   try {
-    // 1. 우선 현재 상위 코인 데이터가 비어있다면 fetchTopCoins 호출
+    // 1. 현재 상위 코인 데이터가 비어 있으면 fetchTopCoins 호출
     const currentTopCoins = getCachedTopCoins();
     if (currentTopCoins.length === 0) {
       console.log("상위 코인이 비어 있습니다. 데이터를 가져옵니다...");
       await fetchTopCoins(); // 비동기 호출
     }
 
-    // 2. fetchTopCoins가 끝난 뒤 다시 가져오기
+    // 2. fetchTopCoins 완료 후 다시 가져오기
     const updatedTopCoins = getCachedTopCoins();
     if (updatedTopCoins.length === 0) {
       console.error("fetchTopCoins 후에도 cachedTopCoins가 비어 있습니다.");
@@ -34,8 +32,8 @@ const fetchDailyCoins = async () => {
 
     console.log("현재 cachedTopCoins 상태:", updatedTopCoins);
 
-    // 3. 각 코인별로 일별 OHLCV 데이터 호출
-    const promises = updatedTopCoins.map(async (coin) => {
+    // 3. 각 코인별로 일별 OHLCV 데이터를 순차적으로 호출 (딜레이 포함)
+    for (const coin of updatedTopCoins) {
       console.log(`${coin.symbol}에 대한 일별 데이터를 가져옵니다.`);
       try {
         const response = await axios.get(
@@ -45,6 +43,9 @@ const fetchDailyCoins = async () => {
               fsym: coin.symbol,
               tsym: dailyOHLCVConfig.tsym,
               limit: dailyOHLCVConfig.limit,
+            },
+            headers: {
+              authorization: `Apikey ${dailyOHLCVConfig.apiKey}`, // 헤더에 API 키 추가
             },
           }
         );
@@ -56,7 +57,7 @@ const fetchDailyCoins = async () => {
           console.warn(`${coin.symbol}에 대한 데이터가 없습니다.`);
         }
 
-        return {
+        cachedDailyCoins[coin.symbol] = {
           symbol: coin.symbol,
           fullName: coin.fullName,
           daily: dailyData.map((entry) => ({
@@ -69,23 +70,12 @@ const fetchDailyCoins = async () => {
           `${coin.symbol} 데이터를 가져오는 중 오류 발생:`,
           error.message
         );
-        return null; // 실패한 코인은 null 반환
       }
-    });
 
-    // 4. 모든 코인 데이터가 들어올 때까지 대기
-    const allCoinsData = await Promise.all(promises);
+      // 요청 간 딜레이 추가
+      await delay(100); // 0.1초 (초당 10회 제한 대응)
+    }
 
-    // 5. null이 아닌 데이터만 모아서 cachedDailyCoins에 넣음
-    cachedDailyCoins = allCoinsData
-      .filter((coinData) => coinData !== null)
-      .reduce((acc, coinData) => {
-        acc[coinData.symbol] = coinData;
-        return acc;
-      }, {});
-
-    // 호출 간 딜레이 적용 (초당 10회 제한)
-    await delay(100);
     console.log("모든 코인의 일별 데이터 업데이트 완료:", cachedDailyCoins);
   } catch (error) {
     console.error("일별 코인 데이터를 가져오는 중 오류 발생:", error.message);
@@ -101,6 +91,11 @@ fetchDailyCoins().then(() => {
 cron.schedule("0 0 * * *", () => {
   console.log("Cron job running: Fetching daily data at 00:00:00");
   fetchDailyCoins();
+});
+
+// 매 1분마다 호출
+cron.schedule("*/10 * * * *", () => {
+  fetchTopCoins();
 });
 
 // -- 라우트 핸들러

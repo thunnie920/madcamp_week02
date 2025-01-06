@@ -17,12 +17,20 @@ const fetchTopCoins = async () => {
           limit: topTierVolumeConfig.limit,
           tsym: topTierVolumeConfig.defaultCurrency,
         },
+        headers: {
+          authorization: `Apikey ${topTierVolumeConfig.apiKey}`, // API 키를 헤더에 추가
+        },
       }
     );
 
+    // 실제 응답 구조가 어떻게 생겼는지 확인
+    console.log("response.data:", response.data);
+
     const topCoinsData = response.data.Data;
-    if (!topCoinsData || topCoinsData.length === 0) {
-      console.error("Top coins 데이터가 비어 있습니다.");
+
+    // 배열인지 먼저 체크
+    if (!topCoinsData || !Array.isArray(topCoinsData)) {
+      console.error("Top coins 데이터가 배열이 아닙니다:", topCoinsData);
       return;
     }
 
@@ -43,7 +51,7 @@ const fetchTopCoins = async () => {
 };
 
 // 매 30초마다 실행하는 크론 작업
-cron.schedule("*/30 * * * * *", () => {
+cron.schedule("*/10 * * * * *", () => {
   fetchTopCoins();
 });
 
