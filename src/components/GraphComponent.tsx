@@ -18,13 +18,13 @@ interface Coin {
 }
 
 export default function GraphComponent() {
-  const [selected, setSelected] = useState<string>("1 Year"); // 기본 선택 값
+  const [selected, setSelected] = useState<string>("1 Minute"); // 기본 선택 값
 
   const handleSelect = (value: string) => {
     setSelected(value); // 선택된 버튼 상태 업데이트
   };
 
-  const timeOptions: string[] = ["1 Day", "1 Hour", "1 Minute"];
+  const timeOptions: string[] = ["1 Minute", "1 Hour", "1 Day"];
 
   const [isOpen, setIsOpen] = useState(false); // 드롭다운 열림 상태
   const [selectedOption, setSelectedOption] = useState<string>("BTC"); // 선택된 옵션
@@ -88,7 +88,11 @@ export default function GraphComponent() {
           }}
         >
           {/* CoinChartComponent에 selectedOption을 props로 전달 */}
-          <CoinChartComponent selectedCoin={selectedOption} dataLimit={1000} />
+          <CoinChartComponent
+            selectedCoin={selectedOption}
+            dataLimit={1000}
+            selectedTime={selected}
+          />
 
           <DropDownContainer>
             <DropdownButton onClick={toggleDropdown}>

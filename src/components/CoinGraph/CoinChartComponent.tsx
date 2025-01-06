@@ -5,11 +5,13 @@ import { CoinCandle } from "@components/CoinGraph/coinCandle";
 // 타입 정의
 interface CoinChartComponentProps {
   selectedCoin: string;
+  selectedTime: string; // 추가
   dataLimit: number;
 }
 
 export const CoinChartComponent: React.FC<CoinChartComponentProps> = ({
   selectedCoin,
+  selectedTime,
   dataLimit,
 }) => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -52,6 +54,7 @@ export const CoinChartComponent: React.FC<CoinChartComponentProps> = ({
           defaultLimit={dataLimit}
           dataLength={dataLimit}
           name={selectedCoin}
+          timeRange={selectedTime}
         />
       ) : (
         <p>Loading...</p>

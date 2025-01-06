@@ -1,3 +1,4 @@
+import { time } from "console";
 import { scaleLinear } from "d3-scale";
 import React, { useState, useEffect } from "react";
 
@@ -7,6 +8,7 @@ type CandleProps = {
   defaultLimit: number;
   dataLength: number;
   name: string;
+  timeRange: string; // 시간 범위 추가
 };
 
 export const CoinCandle: React.FC<CandleProps> = ({
@@ -15,6 +17,7 @@ export const CoinCandle: React.FC<CandleProps> = ({
   defaultLimit,
   dataLength,
   name,
+  timeRange,
 }) => {
   const [data, setData] = useState<
     { date: string; close: number; open: number }[]
@@ -25,32 +28,65 @@ export const CoinCandle: React.FC<CandleProps> = ({
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `http://localhost:4000/dailycoins/daily-coins`
-        );
-        const result = await response.json();
 
-        if (result.success && result.data[name]) {
-          const dailyData = result.data[name].daily.map(
-            (item: any, index: number, arr: any[]) => ({
+        // API Endpoint 생성
+        const endpoint = `http://localhost:4000/coinsprice/ohlcv/${timeRange
+          .toLowerCase()
+          .replace(/\d+\s*/, "")}`;
+        console.log("API Endpoint:", endpoint);
+
+        const response = await fetch(endpoint);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("API Response:", result);
+
+        const timeKeyMap: Record<string, string> = {
+          day: "daily",
+          hour: "hourly",
+          minute: "minute",
+        };
+        const timeKey =
+          timeKeyMap[timeRange.toLowerCase().replace(/\d+\s*/, "")];
+
+        if (!timeKey) {
+          console.error(`Invalid time range provided: ${timeRange}`);
+          setData([]);
+          setLoading(false);
+          return;
+        }
+        // 데이터 접근
+        if (result.success && result.data[name]?.[timeKey]) {
+          const mappedData = result.data[name][timeKey].map(
+            (
+              item: { date: string; close: number },
+              index: number,
+              arr: { date: string; close: number }[]
+            ) => ({
               ...item,
               open: index > 0 ? arr[index - 1].close : item.close, // 이전 종가를 open으로 설정
             })
           );
-          setData(dailyData.slice(-dataLength));
+          console.log("Mapped Data:", mappedData);
+          setData(mappedData.slice(-dataLength)); // 데이터 길이만큼 자르기
         } else {
-          console.error("No data available for the selected coin.");
+          console.error(
+            `No data available for the selected coin (${name}) with time range ${timeKey}.`
+          );
+          setData([]); // 데이터 초기화
         }
-
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setData([]);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [name, dataLength]);
+  }, [name, dataLength, timeRange]);
 
   if (loading) {
     return <p>Loading...</p>;
