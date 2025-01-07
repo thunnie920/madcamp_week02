@@ -23,6 +23,60 @@ interface User {
   profileImage: string;
 }
 
+// 익명 사용자 이름 매핑을 위한 전역 Map
+const nameMap = new Map<string, string>();
+
+// 무작위 이름 생성 함수
+const generateRandomName = () => {
+  const adjectives = [
+    "피자를 먹는",
+    "책을 읽는",
+    "물을 마시는",
+    "수영을 하는",
+    "잠을 자는",
+    "씩씩거리는",
+    "웃고있는",
+    "울고있는",
+    "점프를 하는",
+    "넘어지는",
+    "달리는",
+    "차를 모는",
+    "기어다니는",
+  ];
+  const nouns = [
+    "여우",
+    "판다",
+    "요정",
+    "공주",
+    "왕자",
+    "북극곰",
+    "대나무",
+    "장미",
+    "책상",
+    "의자",
+    "침대",
+    "안경",
+    "돌고래",
+    "바다",
+    "숲",
+    "산",
+    "호랑이",
+    "넙죽이",
+  ];
+  const randomAdjective =
+    adjectives[Math.floor(Math.random() * adjectives.length)];
+  const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+  return `${randomAdjective} ${randomNoun}`;
+};
+
+// senderId로 이름을 가져오거나 생성
+const getSenderName = (senderId: string) => {
+  if (!nameMap.has(senderId)) {
+    nameMap.set(senderId, generateRandomName());
+  }
+  return nameMap.get(senderId) as string;
+};
+
 export default function ChatComponent() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -155,9 +209,8 @@ export default function ChatComponent() {
               >
                 {/* 상대방이면 이름 표시 */}
                 {currentUser && msg.senderId !== currentUser._id ? (
-                  <NameText>{msg.senderName}</NameText>
+                  <NameText>{getSenderName(msg.senderId)}</NameText>
                 ) : null}
-
                 <div
                   style={{ flexDirection: "row", gap: "5px", display: "flex" }}
                 >
