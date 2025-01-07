@@ -22,20 +22,20 @@ export default function TopBar() {
       </LogoContainer>
       <Title>FF0000</Title>
       <NavContainer>
-        {pathname !== "/" && pathname !== "/signup" && (
+        {pathname === "/" && (
           <Link
-            href="/signup"
+            href="/login"
             style={{ textDecoration: "none", color: "inherit" }}
           >
-            <NavItem>회원가입</NavItem>
+            <NavItem>로그인</NavItem>
           </Link>
         )}
-        <Link
-          href="/login"
-          style={{ textDecoration: "none", color: "inherit" }}
-        >
-          <NavItem>로그인</NavItem>
-        </Link>
+        {pathname === "/main" && (
+          <Link href="/" style={{ textDecoration: "none", color: "inherit" }}>
+            <NavItem>로그아웃</NavItem>
+          </Link>
+        )}
+        {pathname === "/login" && null}
       </NavContainer>
     </TopBarWrapper>
   );

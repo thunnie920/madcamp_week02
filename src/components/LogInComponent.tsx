@@ -6,10 +6,14 @@ import LogInBtn from "@image/logInBtn.png";
 import { easeIn, easeInOut, motion } from "framer-motion";
 
 export default function LogInComponent() {
-  const kakaoLogin = () => {
+  /*const kakaoLogin = () => {
     console.log("카카오 로그인 버튼 클릭됨!");
     alert("카카오 로그인 버튼 클릭됨!");
+  };*/
+  const kakaoLogin = () => {
+    window.location.href = "http://localhost:4000/auth/kakao"; // 백엔드 로그인 경로
   };
+
   /*
   const kakaoLogin = async () => {
 	window.location.href = process.env.NEXT_PUBLIC_API_URL + "/auth/kakao";
