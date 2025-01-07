@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import styled from "styled-components";
+import io from "socket.io-client";
 import Image from "next/image";
 import NewPerson from "@image/newPerson.png";
 import TextField from "@mui/material/TextField";
@@ -17,7 +18,7 @@ interface Message {
 export default function ChatComponent() {
   const [input, setInput] = useState(""); // 사용자 입력 상태
   const [messages, setMessages] = useState<Message[]>([]); // 메시지 상태 관리
-  const [currentUserId, setCurrentUserId] = useState(""); // 현재 사용자 ID
+  const [currentUser, setCurrentUser] = useState({ id: "", name: "" }); // 현재 사용자 정보
   const [isComposing, setIsComposing] = useState(false);
 
   const nameMap = new Map<string, string>(); // 익명 사용자 이름 매핑
@@ -73,8 +74,34 @@ export default function ChatComponent() {
     return nameMap.get(senderId) as string;
   };
 
-  // JSON 데이터 fetch
+  // WebSocket 초기화
   useEffect(() => {
+    const socket = io("http://localhost:4000", {
+      path: "/socket.io",
+    });
+
+    socket.on("connect", () => {
+      console.log("WebSocket connected!");
+    });
+
+    // 서버에서 현재 사용자 정보 받기
+    socket.on("init", (user) => {
+      setCurrentUser({ id: user.id, name: user.name }); // 서버에서 사용자 정보 설정
+    });
+
+    // 메시지 수신 이벤트 등록
+    socket.on("receive message", (message: Message) => {
+      setMessages((prev) => [...prev, message]); // 새로운 메시지를 상태에 추가
+    });
+
+    // 컴포넌트 언마운트 시 소켓 연결 해제
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  // JSON 데이터 fetch
+  /*useEffect(() => {
     const fetchMessages = async () => {
       try {
         const response = await fetch("/temp_chat.json"); // public 폴더 내 JSON 파일 경로
@@ -91,7 +118,7 @@ export default function ChatComponent() {
     };
 
     fetchMessages();
-  }, []);
+  }, []);*/
 
   const handleCompositionStart = () => {
     setIsComposing(true); // IME 입력 시작
@@ -105,20 +132,25 @@ export default function ChatComponent() {
     setInput(event.target.value);
   };
 
-  const handleKeyDown = async (
-    event: React.KeyboardEvent<HTMLInputElement>
-  ) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (isComposing) return;
 
     if (event.key === "Enter" && input.trim()) {
       event.preventDefault();
-      const userMessage = {
+
+      const socket = io("http://localhost:4000"); // WebSocket 서버와 연결
+      const userMessage: Message = {
         messageId: `msg_${messages.length + 1}`,
-        senderId: currentUserId,
-        senderName: "You",
+        senderId: currentUser.id,
+        senderName: currentUser.name,
         message: input,
         time: new Date().toISOString(),
       };
+
+      // 서버로 메시지 전송
+      socket.emit("send message", userMessage);
+
+      // 로컬 메시지 추가
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
     }
@@ -138,9 +170,9 @@ export default function ChatComponent() {
           {messages.map((msg, index) => (
             <MessageContainer
               key={msg.messageId || index}
-              role={msg.senderId === currentUserId ? "user" : "other"}
+              role={msg.senderId === currentUser.id ? "user" : "other"}
             >
-              {msg.senderId !== currentUserId && (
+              {msg.senderId !== currentUser.id && (
                 <OtherIcon>
                   <Image src={NewPerson} alt="person" width={30} height={30} />
                 </OtherIcon>
@@ -148,7 +180,7 @@ export default function ChatComponent() {
               <div
                 style={{ flexDirection: "column", gap: "2px", display: "flex" }}
               >
-                {msg.senderId !== currentUserId ? (
+                {msg.senderId !== currentUser.id ? (
                   <NameText>{msg.senderName}</NameText>
                 ) : (
                   <></>
@@ -156,10 +188,12 @@ export default function ChatComponent() {
                 <div
                   style={{ flexDirection: "row", gap: "5px", display: "flex" }}
                 >
-                  {msg.senderId !== currentUserId ? (
+                  {msg.senderId !== currentUser.id ? (
                     <>
                       <TextContainer
-                        role={msg.senderId === currentUserId ? "user" : "other"}
+                        role={
+                          msg.senderId === currentUser.id ? "user" : "other"
+                        }
                       >
                         {msg.message}
                       </TextContainer>
@@ -182,7 +216,9 @@ export default function ChatComponent() {
                       </TimeText>
 
                       <TextContainer
-                        role={msg.senderId === currentUserId ? "user" : "other"}
+                        role={
+                          msg.senderId === currentUser.id ? "user" : "other"
+                        }
                       >
                         {msg.message}
                       </TextContainer>

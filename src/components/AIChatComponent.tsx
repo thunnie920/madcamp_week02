@@ -24,7 +24,7 @@ export default function AIChatComponent() {
   // 실제 API 호출
   const callGptApi = async (userMessage: string) => {
     try {
-      const response = await axios.post("http://localhost:4000/chat", {
+      const response = await axios.post("http://localhost:4000/aichat", {
         message: userMessage,
       });
 

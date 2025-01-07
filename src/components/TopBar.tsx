@@ -10,6 +10,27 @@ import { usePathname } from "next/navigation";
 export default function TopBar() {
   const pathname = usePathname();
 
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/auth/logout", {
+        method: "POST",
+        credentials: "include", // 세션 정보를 전달
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message); // 로그아웃 성공 메시지
+        window.location.href = "/login"; // 로그인 페이지로 리다이렉트
+      } else {
+        const error = await response.json();
+        alert(error.message || "로그아웃 중 문제가 발생했습니다.");
+      }
+    } catch (error) {
+      console.error("로그아웃 요청 실패:", error);
+      alert("로그아웃 요청 중 문제가 발생했습니다.");
+    }
+  };
+
   return (
     <TopBarWrapper
       className="MainTopBarWrapper"
@@ -22,7 +43,7 @@ export default function TopBar() {
       </LogoContainer>
       <Title>FF0000</Title>
       <NavContainer>
-        {pathname === "/" && (
+        {pathname === "/signup" && (
           <Link
             href="/login"
             style={{ textDecoration: "none", color: "inherit" }}
@@ -30,10 +51,13 @@ export default function TopBar() {
             <NavItem>로그인</NavItem>
           </Link>
         )}
-        {pathname === "/main" && (
-          <Link href="/" style={{ textDecoration: "none", color: "inherit" }}>
-            <NavItem>로그아웃</NavItem>
-          </Link>
+        {pathname === "/" && (
+          <NavItem
+            onClick={handleLogout}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            로그아웃
+          </NavItem>
         )}
         {pathname === "/login" && null}
       </NavContainer>

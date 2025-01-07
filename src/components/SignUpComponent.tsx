@@ -68,6 +68,6 @@ const SignUpBtn = styled.button`
   &.kakao {
     background: #fee500;
     color: #391c1c;
-    font-weight: 600;
+    font-weight: 400;
   }
 `;
