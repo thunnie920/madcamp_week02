@@ -29,7 +29,7 @@ router.get(
     console.log("Logged-in user:", req.user);
 
     // 프론트엔드로 리다이렉트
-    const frontendURL = `http://localhost:3000/main`;
+    const frontendURL = `http://localhost:3000/`;
     res.redirect(frontendURL);
   }
 );
