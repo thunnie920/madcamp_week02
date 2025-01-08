@@ -100,7 +100,7 @@ export default function GraphComponent() {
               <Image src={Dropdown} alt="dropdown" width={20} height={20} />
             </DropdownButton>
             {isOpen && (
-              <OptionsContainer>
+              <OptionsContainer isOpen={isOpen}>
                 {options.map((option) => (
                   <Option
                     key={option}
@@ -170,7 +170,7 @@ const TimeBtn = styled.button<TimeBtnProps>`
 `;
 
 const DropDownContainer = styled.div`
-  position: absolute;
+  position: relative;
   display: flex;
   width: 20%;
   height: 100%;
@@ -196,7 +196,7 @@ const DropdownButton = styled.button`
   align-self: flex-start;
 `;
 
-const OptionsContainer = styled.ul`
+const OptionsContainer = styled.ul<{ isOpen: boolean }>`
   position: absolute;
   left: 0;
   top: 40px;
@@ -204,10 +204,15 @@ const OptionsContainer = styled.ul`
   background-color: #f0f0f0;
   border-radius: 0px 0px 10px 10px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: ${({ isOpen }) => (isOpen ? 10 : -1)}; // 열리면 위로, 닫히면 아래로
   list-style: none;
   margin: 0;
   padding: 10px 0;
-  z-index: 100;
+
+  z-index: ${(props) =>
+    props.isOpen ? 100 : -1}; /* 닫혀 있으면 그래프 아래로 */
+  pointer-events: ${(props) =>
+    props.isOpen ? "auto" : "none"}; /* 닫혀 있으면 마우스 이벤트 비활성화 */
 
   /* 스크롤 관련 설정 */
   max-height: calc(100% - 60px); /* 드롭다운의 최대 높이 설정 */

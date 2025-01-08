@@ -1,5 +1,5 @@
 "use client";
-
+import { useState, useEffect, useRef } from "react";
 import { styled } from "styled-components";
 import Link from "next/link";
 import Image from "next/image";
@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 
 export default function TopBar() {
   const pathname = usePathname();
+  const [userName, setUserName] = useState<string | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -31,6 +32,26 @@ export default function TopBar() {
     }
   };
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const res = await fetch("http://localhost:4000/auth/profile", {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error(`Fetch failed with status: ${res.status}`);
+        }
+        const data = await res.json();
+        console.log("Fetched user data:", data);
+        setUserName(data.user.username); // 사용자 이름 상태 설정
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   return (
     <TopBarWrapper
       className="MainTopBarWrapper"
@@ -48,7 +69,12 @@ export default function TopBar() {
             <NavItem>로그인</NavItem>
           </Link>
         )}
-        {pathname === "/" && <NavItem onClick={handleLogout}>로그아웃</NavItem>}
+        {pathname === "/" && (
+          <>
+            <NavItem onClick={handleLogout}>로그아웃</NavItem>
+            {userName && <NavItem>{userName}님</NavItem>}
+          </>
+        )}
         {pathname === "/login" && null}
       </NavContainer>
     </TopBarWrapper>
