@@ -49,7 +49,7 @@ export default function CoinListComponent() {
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCoins = async () => {
       try {
         setIsLoading(true);
 
@@ -65,6 +65,23 @@ export default function CoinListComponent() {
           originalOrder: index,
         }));
 
+        setCoins(allCoinsWithOrder); // 전체 리스트만 설정
+        setFilteredCoins(allCoinsWithOrder); // 필터링된 리스트 초기화
+      } catch (error) {
+        console.error("Failed to fetch coins:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCoins();
+  }, []); // 빈 배열이므로 컴포넌트가 처음 렌더링될 때만 실행
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (!userId) return;
+
+      try {
         // 회원별 좋아요 리스트 가져오기
         const favoritesResponse = await axios.get(
           "http://localhost:4000/favorites",
@@ -76,13 +93,13 @@ export default function CoinListComponent() {
           (fav: { symbol: string }) => fav.symbol
         );
 
-        // 좋아요 리스트와 병합 및 정렬
-        const enrichedCoins = allCoinsWithOrder
-          .map((coin: Coin) => ({
+        // 좋아요 리스트 병합 및 정렬
+        const enrichedCoins = coins
+          .map((coin) => ({
             ...coin,
             isFavorite: favoriteSymbols.includes(coin.symbol), // 좋아요 상태 설정
           }))
-          .sort((a: Coin, b: Coin) => {
+          .sort((a, b) => {
             if (b.isFavorite === a.isFavorite) {
               // 좋아요 상태가 같으면 원래 순서대로
               return (a.originalOrder ?? 0) - (b.originalOrder ?? 0);
@@ -91,21 +108,14 @@ export default function CoinListComponent() {
             return Number(b.isFavorite) - Number(a.isFavorite);
           });
 
-        console.log("Sorted coin data:", enrichedCoins);
-
-        setCoins(enrichedCoins);
-        setFilteredCoins(enrichedCoins);
+        setFilteredCoins(enrichedCoins); // 필터링된 리스트 업데이트
       } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setIsLoading(false);
+        console.error("Failed to fetch favorites:", error);
       }
     };
 
-    if (userId) {
-      fetchData();
-    }
-  }, [userId]);
+    fetchFavorites();
+  }, [userId, coins]); // `userId` 또는 `coins`가 변경될 때 실행
 
   const handleFavoriteToggle = async (
     symbol: string,

@@ -44,21 +44,11 @@ export default function TopBar() {
       <Title>FF0000</Title>
       <NavContainer>
         {pathname === "/signup" && (
-          <Link
-            href="/login"
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
+          <Link href="/login">
             <NavItem>로그인</NavItem>
           </Link>
         )}
-        {pathname === "/" && (
-          <NavItem
-            onClick={handleLogout}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            로그아웃
-          </NavItem>
-        )}
+        {pathname === "/" && <NavItem onClick={handleLogout}>로그아웃</NavItem>}
         {pathname === "/login" && null}
       </NavContainer>
     </TopBarWrapper>
