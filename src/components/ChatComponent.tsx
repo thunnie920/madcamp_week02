@@ -141,7 +141,7 @@ export default function ChatComponent() {
     setInput(event.target.value);
 
   // 메시지 전송 함수
-  const sendMessage = (messageContent: string) => {
+  const sendMessage = async (messageContent: string) => {
     console.log("socketRef.current:", socketRef.current);
     console.log("currentUser:", currentUser);
 
@@ -158,6 +158,31 @@ export default function ChatComponent() {
 
       // *** 여기 중요! 백엔드에서 'send message' 로 듣고 있으므로 이벤트명 통일 ***
       socketRef.current.emit("send message", messageData);
+      // 2. 백엔드 API를 통해 DB에 메시지 저장
+      try {
+        const response = await fetch(
+          "http://localhost:4000/chatother/messages",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user: currentUser._id,
+              message: messageContent,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to save message: ${response.status}`);
+        }
+
+        const savedMessage = await response.json();
+        console.log("Message saved to DB:", savedMessage);
+      } catch (error) {
+        console.error("Failed to save message to DB:", error);
+      }
     } else {
       console.warn("socketRef.current or currentUser is not initialized");
     }
