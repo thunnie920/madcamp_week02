@@ -16,6 +16,7 @@ interface Coin {
   symbol: string;
   changePct24Hour: number;
   isFavorite: boolean;
+  originalOrder?: number; // 원래 순서를 나타내는 속성
 }
 
 export default function CoinListComponent() {
@@ -48,34 +49,63 @@ export default function CoinListComponent() {
   }, []);
 
   useEffect(() => {
-    const callCoinApi = async () => {
+    const fetchData = async () => {
       try {
-        setIsLoading(true); // 로딩 시작
-        const response = await axios.get(
+        setIsLoading(true);
+
+        // 전체 코인 리스트 가져오기
+        const coinsResponse = await axios.get(
           "http://localhost:4000/volumelist/top-coins"
         );
-        console.log("API Response:", response.data); // 응답 데이터 확인
-        const data: Coin[] = response.data.data;
+        const allCoins = coinsResponse.data.data;
 
-        // 데이터가 배열인지 확인
-        if (!Array.isArray(data)) {
-          throw new Error("API response is not an array");
-        }
+        // `originalOrder` 추가
+        const allCoinsWithOrder = allCoins.map((coin: Coin, index: number) => ({
+          ...coin,
+          originalOrder: index,
+        }));
 
-        const sortedData = data.sort(
-          (a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0)
+        // 회원별 좋아요 리스트 가져오기
+        const favoritesResponse = await axios.get(
+          "http://localhost:4000/favorites",
+          {
+            params: { user: userId },
+          }
         );
-        setCoins(sortedData);
-        setFilteredCoins(sortedData);
+        const favoriteSymbols = favoritesResponse.data.map(
+          (fav: { symbol: string }) => fav.symbol
+        );
+
+        // 좋아요 리스트와 병합 및 정렬
+        const enrichedCoins = allCoinsWithOrder
+          .map((coin: Coin) => ({
+            ...coin,
+            isFavorite: favoriteSymbols.includes(coin.symbol), // 좋아요 상태 설정
+          }))
+          .sort((a: Coin, b: Coin) => {
+            if (b.isFavorite === a.isFavorite) {
+              // 좋아요 상태가 같으면 원래 순서대로
+              return (a.originalOrder ?? 0) - (b.originalOrder ?? 0);
+            }
+            // 좋아요(true) 먼저
+            return Number(b.isFavorite) - Number(a.isFavorite);
+          });
+
+        console.log("Sorted coin data:", enrichedCoins);
+
+        setCoins(enrichedCoins);
+        setFilteredCoins(enrichedCoins);
       } catch (error) {
-        console.error("Failed to fetch coin data:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
-        setIsLoading(false); // 로딩 종료
+        setIsLoading(false);
       }
     };
 
-    callCoinApi();
-  }, []);
+    if (userId) {
+      fetchData();
+    }
+  }, [userId]);
 
   const handleFavoriteToggle = async (
     symbol: string,
@@ -87,24 +117,31 @@ export default function CoinListComponent() {
       return;
     }
 
-    try {
-      const response = await axios.post(
-        "http://localhost:4000/favorites/toggle",
-        {
-          symbol,
-          fullName,
-          isFavorite,
-          user: userId,
-        }
-      );
+    console.log("Before toggle:", { symbol, isFavorite });
 
-      // 상태 업데이트
-      setCoins((prevCoins) =>
-        prevCoins.map((coin) =>
-          coin.symbol === symbol ? { ...coin, isFavorite: !isFavorite } : coin
-        )
+    try {
+      await axios.post("http://localhost:4000/favorites/toggle", {
+        symbol,
+        fullName,
+        isFavorite: !isFavorite,
+        user: userId,
+      });
+
+      setCoins((prevCoins) => {
+        const updatedCoins = prevCoins
+          .map((coin) =>
+            coin.symbol === symbol ? { ...coin, isFavorite: !isFavorite } : coin
+          )
+          .sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite)); // 좋아요(true) 먼저 정렬
+
+        setFilteredCoins(updatedCoins); // 필터된 리스트도 업데이트
+        console.log("Updated and sorted coins:", updatedCoins);
+        return updatedCoins;
+      });
+
+      console.log(
+        `Toggled favorite for ${symbol}. New isFavorite: ${!isFavorite}`
       );
-      console.log("Favorite toggled successfully:", response.data);
     } catch (error) {
       console.error("Error toggling favorite:", error);
     }
@@ -178,14 +215,20 @@ export default function CoinListComponent() {
                 src={coin.isFavorite ? Selected : Unselected}
                 alt={coin.isFavorite ? "selected" : "unselected"}
                 width={20}
-                style={{ marginLeft: "13px", cursor: "pointer" }}
-                onClick={() =>
+                style={{
+                  marginLeft: "13px",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  console.log(
+                    `Toggling favorite for ${coin.symbol}. Current isFavorite: ${coin.isFavorite}`
+                  );
                   handleFavoriteToggle(
                     coin.symbol,
                     coin.fullName,
                     coin.isFavorite
-                  )
-                }
+                  );
+                }}
               />
               <CoinName>{coin.symbol}</CoinName>{" "}
               <CoinPrice
