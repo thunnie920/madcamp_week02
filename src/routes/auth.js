@@ -35,7 +35,7 @@ router.get(
 );
 
 // 로그아웃 라우트 (예: /auth/logout)
-router.get("/logout", (req, res) => {
+router.post("/logout", (req, res) => {
   if (req.isAuthenticated()) {
     req.logout((err) => {
       if (err) {

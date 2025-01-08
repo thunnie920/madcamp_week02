@@ -4,11 +4,13 @@ const cors = require("cors");
 const session = require("express-session");
 const passport = require("./src/passport/passport");
 const connectDB = require("./src/config/dbConnect");
+const connectDBFav = require("./src/config/dbConnectFav");
 const http = require("http");
 const { Server } = require("socket.io");
 
 // (1) MongoDB 연결
 connectDB();
+connectDBFav();
 
 // (2) User 모델 임포트
 const User = require("./src/models/userModel");
@@ -18,6 +20,7 @@ const aiChatRoutes = require("./src/routes/AIchat");
 const topTierVolumeRoutes = require("./src/routes/topTierVolume");
 const coinPriceRoutes = require("./src/routes/ohlcv");
 const authRoutes = require("./src/routes/auth");
+const favoriteRoutes = require("./src/routes/favorite");
 
 // Express 앱 초기화
 const app = express();
@@ -108,6 +111,7 @@ app.use("/chat", aiChatRoutes);
 app.use("/volumelist", topTierVolumeRoutes);
 app.use("/coinsprice", coinPriceRoutes);
 app.use("/auth", authRoutes);
+app.use("/favorites", favoriteRoutes);
 
 // ======================
 // 에러 핸들링
