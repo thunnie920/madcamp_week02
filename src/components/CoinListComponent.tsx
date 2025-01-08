@@ -23,6 +23,29 @@ export default function CoinListComponent() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredCoins, setFilteredCoins] = useState<Coin[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true); // 로딩 상태 추가
+  const [userId, setUserId] = useState<string | null>(null); // 사용자 ID 상태 추가
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch("http://localhost:4000/auth/profile", {
+          credentials: "include", // 쿠키 포함
+        });
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch user profile: ${response.statusText}`
+          );
+        }
+        const data = await response.json();
+        console.log("Fetched profile data:", data); // 응답 데이터 확인
+        setUserId(data.user._id); //
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   useEffect(() => {
     const callCoinApi = async () => {
@@ -54,24 +77,37 @@ export default function CoinListComponent() {
     callCoinApi();
   }, []);
 
-  const handleFavoriteToggle = (index: number) => {
-    const selectedCoin = filteredCoins[index];
+  const handleFavoriteToggle = async (
+    symbol: string,
+    fullName: string,
+    isFavorite: boolean
+  ) => {
+    if (!userId) {
+      console.error("User ID not available");
+      return;
+    }
 
-    // coins 배열 업데이트
-    setCoins((prevCoins) =>
-      prevCoins.map((coin) =>
-        coin.symbol === selectedCoin.symbol
-          ? { ...coin, isFavorite: !coin.isFavorite }
-          : coin
-      )
-    );
+    try {
+      const response = await axios.post(
+        "http://localhost:4000/favorites/toggle",
+        {
+          symbol,
+          fullName,
+          isFavorite,
+          user: userId,
+        }
+      );
 
-    // filteredCoins 배열 업데이트
-    setFilteredCoins((prevFilteredCoins) =>
-      prevFilteredCoins.map((coin, i) =>
-        i === index ? { ...coin, isFavorite: !coin.isFavorite } : coin
-      )
-    );
+      // 상태 업데이트
+      setCoins((prevCoins) =>
+        prevCoins.map((coin) =>
+          coin.symbol === symbol ? { ...coin, isFavorite: !isFavorite } : coin
+        )
+      );
+      console.log("Favorite toggled successfully:", response.data);
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,7 +179,13 @@ export default function CoinListComponent() {
                 alt={coin.isFavorite ? "selected" : "unselected"}
                 width={20}
                 style={{ marginLeft: "13px", cursor: "pointer" }}
-                onClick={() => handleFavoriteToggle(index)} // 즐겨찾기 토글
+                onClick={() =>
+                  handleFavoriteToggle(
+                    coin.symbol,
+                    coin.fullName,
+                    coin.isFavorite
+                  )
+                }
               />
               <CoinName>{coin.symbol}</CoinName>{" "}
               <CoinPrice
