@@ -69,10 +69,16 @@ const fetchOHLCV = async (type) => {
           console.warn(`${coin.symbol}에 대한 ${type} 데이터가 없습니다.`);
         }
 
-        const mappedData = ohlcvData.map((entry) => ({
-          date: new Date(entry.time * 1000).toLocaleDateString(),
-          close: entry.close,
-        }));
+        const mappedData = ohlcvData.map((entry) => {
+          const date = new Date(entry.time * 1000);
+          return {
+            date: date.toLocaleString(), // 날짜와 시간까지 포함
+            high: entry.high,
+            low: entry.low,
+            open: entry.open,
+            close: entry.close,
+          };
+        });
 
         if (type === "day") {
           cachedDailyCoins[coin.symbol] = {
@@ -89,7 +95,7 @@ const fetchOHLCV = async (type) => {
         } else if (type === "minute") {
           cachedMinuteCoins[coin.symbol] = {
             symbol: coin.symbol,
-            fullName: coin.fullName,
+            data: coin.fullName,
             minute: mappedData,
           };
         }
